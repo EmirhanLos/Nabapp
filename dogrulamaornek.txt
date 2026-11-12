@@ -1,0 +1,13 @@
+SMS:
+Nabapp doğrulama kodunuz: {code}. Kod 5 dakika geçerlidir. Güvenliğiniz için bu kodu kimseyle paylaşmayın.
+
+E-posta konu:
+Nabapp e-posta doğrulama kodunuz
+
+E-posta metni:
+Merhaba,
+
+Nabapp hesabınızı doğrulamak için kodunuz: {code}
+Bu kod 10 dakika geçerlidir. Güvenliğiniz için kodunuzu kimseyle paylaşmayın.
+
+Bu isteği siz başlatmadıysanız bu e-postayı yok sayabilirsiniz.

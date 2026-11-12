@@ -1,0 +1,18 @@
+{
+  "name": "Nabapp",
+  "short_name": "Nabapp",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f0e8",
+  "theme_color": "#f4f0e8",
+  "description": "Gizliliği önceliklendiren mesajlaşma uygulaması.",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

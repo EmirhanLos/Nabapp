@@ -1,0 +1,26 @@
+{
+  "name": "nabapp",
+  "version": "1.0.0",
+  "description": "Nabapp — uçtan uca şifreli, P2P (WebRTC) mesajlaşma uygulaması",
+  "type": "commonjs",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "test": "node --test",
+    "backup": "node server/backup.js",
+    "restore": "node server/restore.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "compression": "^1.7.4",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "helmet": "^8.0.0",
+    "nodemailer": "^10.3.1",
+    "qrcode": "^1.5.4",
+    "swagger-ui-express": "^5.0.1",
+    "ws": "^8.18.0"
+  }
+}

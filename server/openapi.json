@@ -1,0 +1,226 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Nabapp API",
+    "version": "1.0.0",
+    "description": "Nabapp HTTP API. The service stores encrypted message envelopes; clients must keep message plaintext and private keys local."
+  },
+  "servers": [
+    { "url": "/api", "description": "Current API" },
+    { "url": "/api/v1", "description": "Versioned API alias" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": { "type": "http", "scheme": "bearer" }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": { "error": { "type": "string" } }
+      },
+      "Contact": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "phone": { "type": "string", "example": "+905301234567" },
+          "displayName": { "type": "string" },
+          "avatarColor": { "type": "string" },
+          "nickname": { "type": "string", "nullable": true },
+          "lastSeen": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check",
+        "responses": { "200": { "description": "Service is healthy" } }
+      }
+    },
+    "/auth/request-code": {
+      "post": {
+        "summary": "Request an SMS verification code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone"],
+                "properties": { "phone": { "type": "string" } }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Code request result" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/auth/verify-code": {
+      "post": {
+        "summary": "Verify a phone code",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone", "code"],
+                "properties": {
+                  "phone": { "type": "string" },
+                  "code": { "type": "string", "minLength": 4, "maxLength": 8 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Verified registration/login flow" },
+          "400": { "description": "Invalid code" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Log in with phone, password, and optional TOTP",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone", "password"],
+                "properties": {
+                  "phone": { "type": "string" },
+                  "password": { "type": "string" },
+                  "twofaCode": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Authenticated" }, "401": { "description": "Authentication failed" } }
+      }
+    },
+    "/auth/reauthenticate": {
+      "post": {
+        "summary": "Reauthenticate the current session to unlock the app",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["password"],
+                "properties": {
+                  "password": { "type": "string" },
+                  "twofaCode": { "type": "string", "maxLength": 64, "description": "TOTP or one-time recovery code when 2FA is enabled" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Current session reauthenticated" },
+          "401": { "description": "Invalid password or second factor" },
+          "429": { "description": "Reauthentication rate limit exceeded" }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "summary": "Get the current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Current user" }, "401": { "description": "Unauthorized" } }
+      },
+      "patch": {
+        "summary": "Update profile and preferences",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Updated user" }, "401": { "description": "Unauthorized" } }
+      }
+    },
+    "/contacts": {
+      "get": {
+        "summary": "List contacts",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Contact list" } }
+      },
+      "post": {
+        "summary": "Add a contact",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone"],
+                "properties": {
+                  "phone": { "type": "string" },
+                  "nickname": { "type": "string", "maxLength": 60 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "201": { "description": "Contact created" }, "409": { "description": "Already in contacts" } }
+      }
+    },
+    "/contacts/{phone}": {
+      "parameters": [
+        { "name": "phone", "in": "path", "required": true, "schema": { "type": "string" } }
+      ],
+      "patch": {
+        "summary": "Update a contact nickname",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Contact updated" } }
+      },
+      "delete": {
+        "summary": "Remove a contact",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Contact removed" } }
+      }
+    },
+    "/messages/pending": {
+      "get": {
+        "summary": "Fetch queued encrypted messages",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "Encrypted pending messages" } }
+      }
+    },
+    "/messages": {
+      "post": {
+        "summary": "Queue an encrypted message for offline delivery",
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["toPhone", "ciphertext", "ratchetHeader"],
+                "properties": {
+                  "toPhone": { "type": "string" },
+                  "ciphertext": { "type": "string" },
+                  "ratchetHeader": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "Queued" }, "404": { "description": "Recipient not found" } }
+      }
+    },
+    "/2fa/qr": {
+      "get": {
+        "summary": "Get the current TOTP setup QR code",
+        "security": [{ "bearerAuth": [] }],
+        "responses": { "200": { "description": "QR code data URL" }, "400": { "description": "Setup not started" } }
+      }
+    }
+  }
+}

@@ -1,0 +1,1286 @@
+===============================================================================
+                       NABAPP PROJESİ - TÜM ÖNERİLER
+===============================================================================
+
+Bu dosya Nabapp projesi için tüm backend, frontend ve proje düzeyi önerileri 
+içerir. Öneriler öncelik sırasına göre düzenlenmiştir.
+
+===============================================================================
+                           BÖLÜM 1: BACKEND ÖNERİLERİ
+===============================================================================
+
+1. GÜVENLİK
+-----------------------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+1.1 Helmet Middleware Ekle
+   - HTTP güvenlik başlıklarını ayarla (CSP, HSTS, X-Frame-Options vb.)
+   - Kod örneği:
+     const helmet = require('helmet');
+     app.use(helmet());
+
+1.2 CSRF Uygula
+   - Durum değiştiren istekler için CSRF tokenları kullan
+   - Kod örneği:
+     const csrf = require('csurf');
+     const csrfProtection = csrf({ cookie: true });
+
+1.3 İstek Gövdesi Doğrulama
+   - express-validator veya joi ile tüm gelen verileri doğrula
+   - Kod örneği:
+     const { body, validationResult } = require('express-validator');
+     router.post('/auth/login', [
+       body('phone').isMobilePhone(),
+       body('password').isLength({ min: 8 })
+     ], (req, res) => { /* ... */ });
+
+1.4 CORS Yapılandırma
+   - cors paketi ile katı origin beyaz liste kullan
+   - Kod örneği:
+     const cors = require('cors');
+     app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') }));
+
+1.5 Uygun Günlük Kaydı
+   - winston veya pino ile yapılandırılmış loglama
+   - Kod örneği:
+     const winston = require('winston');
+     const logger = winston.createLogger({
+       level: 'info',
+       format: winston.format.json(),
+       transports: [new winston.transports.File({ filename: 'combined.log' })]
+     });
+
+ORTA ÖNCELİK:
+---------------
+
+1.6 API Sürümleme
+   - Sürümlü API rotaları (örn. /api/v1/, /api/v2/)
+
+1.7 İstek İmzası Doğrulama
+   - Hassas işlemler için istek imzalarını doğrula
+
+1.8 Cihaz Parmak İzi
+   - Şüpheli giriş denemelerini tespit etmek için cihazları takip et
+
+1.9 IP Beyaz Liste
+   - Yönetici uç noktaları veya hassas işlemler için
+
+1.10 Kullanıcı Bazlı Hız Sınırlama
+    - Kullanıcı ID'sine göre daha ayrıntılı hız sınırlama
+
+
+2. PERFORMANS VE ÖLÇEKLENEBİLİRLİK
+------------------------------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+2.1 Yanıt Sıkıştırma
+   - compression middleware kullan
+   - Kod örneği:
+     const compression = require('compression');
+     app.use(compression());
+
+2.2 Önbelleleme Katmanı Ekle
+   - Redis şunlar için kullan:
+     * Hız sınırlama depolama
+     * Kullanıcı varlığı takibi
+     * Oturum yönetimi
+     * Mesaj gitme/gitmeme durumu
+   - Kod örneği:
+     const redis = require('redis');
+     const client = redis.createClient();
+
+2.3 Güçlü Kapanım İşleme
+   - SIGTERM/SIGINT işleyerek bağlantıları düzgünce kapat
+   - Kod örneği:
+     process.on('SIGTERM', async () => {
+       await closeDatabase();
+       await closeRedis();
+       server.close();
+     });
+
+ORTA ÖNCELİK:
+---------------
+
+2.4 Sağlık Kontrol Uç Noktası
+   - Yük dengeleyiciler için /health uç noktası
+
+2.5 Veritabanı Yedekleme Zamanlaması
+   - Otomatik SQLite yedeklemeleri
+
+2.6 İstek Zaman Aşımı
+   - Tüm istekler için makul zaman aşımları
+
+2.7 WebSocket Bağlantısı Keep-Alive
+   - WebSocket için HTTP keep-alive yapılandır
+
+2.8 Metrik Toplama
+   - İzleme için Prometheus veya benzeri
+
+
+3. KOD KALİTESİ
+----------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+3.1 TypeScript'e Geçiş
+   - Kod tabanında tip güvenliği ekle
+   - package.json ekle:
+     {
+       "devDependencies": {
+         "typescript": "^5.0.0",
+         "@types/node": "^20.0.0",
+         "@types/express": "^4.17.0"
+       }
+     }
+
+3.2 Kapsamlı Hata İşleme
+   - Merkezi hata işleme middleware
+   - Kod örneği:
+     class AppError extends Error {
+       constructor(statusCode, message) {
+         super(message);
+         this.statusCode = statusCode;
+         this.isOperational = true;
+       }
+     }
+
+3.3 Girdi Temizleme
+   - Kullanıcı içeriği için DOMPurify veya benzeri kullan
+
+3.4 API Dokümantasyonu
+   - swagger-ui-express ile Swagger/OpenAPI
+   - Kod örneği:
+     const swaggerUi = require('swagger-ui-express');
+     const swaggerSpec = require('./swagger.json');
+     app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+ORTA ÖNCELİK:
+---------------
+
+3.5 Test Paketi Uygula
+   - Jest veya Mocha ile birim ve entegrasyon testleri
+   - Kod örneği:
+     describe('Authentication', () => {
+       test('should login with valid credentials', async () => {
+         // test implementation
+       });
+     });
+
+3.6 CI/CD Yapılandırması
+   - Otomatik test için GitHub Actions veya GitLab CI
+
+3.7 Linting Ekle
+   - Güvenlik kuralları ile ESLint
+
+3.8 Pre-commit Hooks
+   - Kod kalitesi kontrolleri için Husky
+
+3.9 Kod Kapsamı Ekle
+   - Minimum kapsam eşikleri ayarla
+
+
+4. ÖZELLİK ARTTIRMA
+---------------------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+4.1 Mesaj Gitme/Gitmeme Durumu Takibi
+   - Gönderildi, okundu durumlarını takip et
+
+4.2 Push Bildirimleri Uygula
+   - FCM (Firebase) veya APNS kullan
+   - Kod örneği:
+     const admin = require('firebase-admin');
+     const message = {
+       notification: { title: 'New message', body: '...' },
+       token: user.fcmToken
+     };
+
+4.3 Mesaj Okuma Alındısı
+   - Mesajların ne zaman okunduğunu takip et
+
+4.4 Mesaj Arama
+   - Mesajlar için tam metin arama
+
+ORTA ÖNCELİK:
+---------------
+
+4.5 Grup Sohbet Desteği
+   - Sohbetlerde birden fazla katılımcıya izin ver
+
+4.6 Mesaj Tepkileri
+   - Mesajlara emoji tepkileri ekle
+
+4.7 Dosya Yükleme Doğrulama
+   - Katı dosya türü ve boyut sınırları uygula
+
+4.8 Mesaj Düzenleme/Silme
+   - Kullanıcıların gönderilen mesajları düzenlemesine veya silmesine izin ver
+
+4.9 Sesli Mesajlar
+   - Sesli mesaj kaydı ve oynatma desteği
+
+4.10 Video Mesajlar
+    - Kısa video klipler için destek
+
+4.11 Konum Paylaşımı
+    - Canlı veya statik konum paylaş
+
+4.12 Rehber Senkronizasyonu
+    - Cihazdan rehber senkronizasyonu (gizlilik kontrolleri ile)
+
+
+5. VERİTABANI İYİLEŞTİRMELERİ
+------------------------------
+
+5.1 Veritabanı İndeksleri Ekle
+   - Sorguları uygun indekslerle optimize et
+   - SQL örneği:
+     CREATE INDEX idx_messages_created ON messages(created_at DESC);
+     CREATE INDEX idx_users_phone ON users(phone);
+
+5.2 Veri Saklama Politikası Uygula
+   - Eski mesajları/çevrimdışı kuyruğunu otomatik sil
+
+5.3 Veritabanı Göç Sistemi Ekle
+   - Şema değişiklikleri için göç aracı kullan
+
+5.4 Veritabanı Yedekleme
+   - Otomatik yedeklemeler ve rotasyon
+
+5.5 Sorgu Optimizasyonu
+   - Yavaş sorguları analiz et ve optimize et
+
+
+6. WEBSOCKET İYİLEŞTİRMELERİ
+-----------------------------
+
+6.1 Yeniden Bağlanma Mantığı Üret
+   - Üstel geri çekme ile otomatik yeniden bağlanma
+
+6.2 Mesaj Kuyruğu Ekle
+   - Kullanıcı çevrimdışıyken gönderilmeyen mesajları sakla
+
+6.3 Heartbeat/Ping-Pong Uygula
+   - Ölü bağlantıları tespit et
+
+6.4 Bağlantı Durumu Takibi
+   - Bağlantı kalitesi metriklerini takip et
+
+6.5 Mesaj Onayı Uygula
+   - Mesaj gönderme ve okunma onayı uygula
+
+
+7. İZLEME VE GÖZLEMLENEBİLİRLİK
+--------------------------------
+
+7.1 Uygulama Performans İzleme
+   - New Relic, Datadog veya benzeri kullan
+
+7.2 Hata Takibi Ekle
+   - Hata izleme için Sentry kullan
+
+7.3 Log Agregasyonu
+   - ELK stack veya benzeri ile logları merkezeleştir
+
+7.4 Uyarı Sistemi
+   - Kritik hatalar için uyarılar ayarla
+
+7.5 Çevrimiçilik İzleme
+   - API uç noktalarının dış izleme
+
+
+8. DAĞITIM
+-----------
+
+8.1 Uygulamayı Dockerlaştır
+   - Konteynerli dağıtım için Dockerfile ayarla
+   - Dockerfile örneği:
+     FROM node:18-alpine
+     WORKDIR /app
+     COPY package*.json ./
+     RUN npm ci --only=production
+     COPY . .
+     EXPOSE 3000
+     CMD ["node", "server/index.js"]
+
+8.2 Ortam Değişkeni Doğrulama Ekle
+   - Başlangıçta gerekli env varları doğrula
+
+8.3 Sağlık Kontrolleri Uygula
+   - Kubernetes/Docker sağlık kontrol uç noktaları
+
+8.4 Geri Alma Stratejisi Ekle
+   - Dağıtımlar için kolay geri alma mekanizması
+
+8.5 Mavi-Yeşil Dağıtım Uygula
+   - Sıfır kesinti süresi dağıtımlar
+
+
+9. BACKEND GÜVENLİK DENETİM KONTROL LİSTESİ
+-------------------------------------------
+
+[ ] Tüm API uç noktaları kimlik doğrulama gerektirir (herkese açık olanlar hariç)
+[ ] Tüm herkese açık uç noktalarda hız sınırlama uygulanır
+[ ] SQL enjeksiyon koruması yerinde
+[ ] XSS koruması uygulanır
+[ ] Durum değiştiren istekler için CSRF tokenları kullanılır
+[ ] Güvenlik başlıkları yapılandırılır (helmet)
+[ ] Gizli bilgiler loglanmaz
+[ ] Parolalar güçlü algoritma ile hashlenir (scrypt iyi)
+[ ] Oturum tokenlarının süresi vardır
+[ ] Üretimde HTTPS zorunlu tutulur
+[ ] Girdi doğrulama uygulanır
+[ ] Dosya yüklemeleri doğrulanır
+[ ] Bağımlılıklar düzenli olarak güncellenir
+[ ] Düzenli güvenlik denetimi yapılır
+
+
+10. BACKEND PERFORMANS OPTİMİZASYONU KONTROL LİSTESİ
+----------------------------------------------------
+
+[ ] Yanıt sıkıştırma etkin
+[ ] Veritabanı sorguları optimize edilmiş
+[ ] Uygun yerlerde önbellekleme uygulanır
+[ ] Statik varlıklar için CDN kullanılır
+[ ] WebSocket bağlantıları verimli yönetilir
+[ ] Bellek kullanımı izlenir
+[ ] CPU kullanımı izlenir
+[ ] Veritabanı bağlantı havuzu yapılandırılır
+[ ] Tüm dış istekler için zaman aşımları ayarlanır
+[ ] Yük testi yapılır
+
+
+===============================================================================
+                           BÖLÜM 2: FRONTEND ÖNERİLERİ
+===============================================================================
+
+1. GÜVENLİK İYİLEŞTİRMELERİ
+-----------------------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+1.1 İçerik Güvenlik Politikası (CSP) Uygula
+   - HTML ekle:
+     <meta http-equiv="Content-Security-Policy" 
+           content="default-src 'self'; script-src 'self' 'unsafe-inline'; 
+                   style-src 'self' 'unsafe-inline';">
+
+1.2 XSS Koruması Ekle
+   - Kullanıcı tarafından ayarlanan mesajlar, ayarlar için sanitize et
+   - Kod örneği:
+     import DOMPurify from 'dompurify';
+     const clean = DOMPurify.sanitize(userInput);
+
+1.3 Güvenli localStorage İşleme
+   - Hassas verileri şifreleyerek sakla
+   - Kod örneği:
+     const encrypted = CryptoJS.AES.encrypt(data, secretKey).toString();
+     localStorage.setItem('key', encrypted);
+
+1.4 Cihaz Tabanlı Şifreleme
+   - Yerel verileri cihaz anahtarıyla şifrele
+   - Kod örneği:
+     const key = await crypto.subtle.generateKey(
+       { name: "AES-GCM", length: 256 },
+       true,
+       ["encrypt", "decrypt"]
+     );
+
+1.5 Token Yenileme Mekanizması
+   - Otomatik token yenileme
+   - Kod örneği:
+     async function refreshToken() {
+       const response = await fetch('/api/auth/refresh', {
+         headers: { Authorization: `Bearer ${oldToken}` }
+       });
+       const { token } = await response.json();
+       localStorage.setItem('token', token);
+     }
+
+ORTA ÖNCELİK:
+---------------
+
+1.6 HTTP Strict Transport Security (HSTS)
+   - HTTPS zorla
+
+1.7 X-Frame-Options
+   - Clickjacking koruması
+
+1.8 Subresource Integrity (SRI)
+   - Harici scriptlerin bütünlüğünü doğrula
+
+1.9 Referrer Policy
+   - Referrer bilgisini kontrol et
+
+1.10 Secure Cookies
+    - HTTPS için güvenli çerezler
+
+
+2. PERFORMANS İYİLEŞTİRMELERİ
+-------------------------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+2.1 Lazy Loading Uygula
+   - Sohbetleri tembel yükle
+   - Kod örneği:
+     const lazyLoad = (element) => {
+       const observer = new IntersectionObserver((entries) => {
+         entries.forEach(entry => {
+           if (entry.isIntersecting) {
+             observer.unobserve(element);
+           }
+         });
+       });
+       observer.observe(element);
+     };
+
+2.2 Virtual Scrolling Ekle
+   - Mesaj listeleri için
+   - Kod örneği:
+     import { useVirtualizer } from '@tanstack/react-virtual';
+
+2.3 Service Worker Uygula
+   - Çevrimdışı destek
+   - Kod örneği:
+     self.addEventListener('install', (event) => {
+       event.waitUntil(
+         caches.open('nabapp-v1').then((cache) => {
+           return cache.addAll(['/', '/app.js', '/styles.css']);
+         })
+       );
+     });
+
+2.4 Göndermeden Önce Sıkıştırma Resimleri
+   - Dosya boyutunu azalt
+   - Kod örneği:
+     async function compressImage(file) {
+       const canvas = document.createElement('canvas');
+       const ctx = canvas.getContext('2d');
+       const img = new Image();
+       // Sıkıştırma mantığı
+     }
+
+2.5 Optimistik UI Güncellemeleri
+   - UI'ı hemen güncelle, arka planda sync et
+   - Kod örneği:
+     function sendMessage(text) {
+       addMessageToUI({ text, status: 'sending' });
+       fetch('/api/messages', { /* ... */ });
+     }
+
+2.6 İstek Debouncing
+   - Arama ve diğer girdiler için
+   - Kod örneği:
+     function debounce(func, wait) {
+       let timeout;
+       return function executedFunction(...args) {
+         const later = () => {
+           clearTimeout(timeout);
+           func(...args);
+         };
+         clearTimeout(timeout);
+         timeout = setTimeout(later, wait);
+       };
+     }
+
+ORTA ÖNCELİK:
+---------------
+
+2.7 Code Splitting
+   - Kodu parçalara böl
+   - Kod örneği:
+     const ChatModule = lazy(() => import('./ChatModule'));
+
+2.8 Tree Shaking
+   - Kullanılmayan kodları kaldır
+
+2.9 Asset Optimization
+   - Görselleri optimize et (WebP formatı)
+
+2.10 Bundle Size Monitoring
+    - Bundle boyutunu izle
+
+2.11 Critical CSS
+    - Kritik CSS'i inline et
+
+2.12 Preload Resources
+    - Önemli kaynakları önceden yükle
+
+
+3. UX İYİLEŞTİRMELERİ
+----------------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+3.1 Gerçek Zamanlı Yazma Göstergeleri
+   - WebSocket ile yazma durumu
+   - Kod örneği:
+     socket.on('typing', ({ from, on }) => {
+       if (on) showTypingIndicator(from);
+       else hideTypingIndicator(from);
+     });
+
+3.2 Mesaj Okuma Alındısı
+   - Gönderilen, teslim edildi, okundu durumları
+   - HTML örneği:
+     <div class="message-status">
+       <span class="icon-sent">✓</span>
+       <span class="icon-delivered">✓✓</span>
+       <span class="icon-read">✓✓</span>
+     </div>
+
+3.3 Mesaj Durumu Göstergeleri
+   - Gönderildi, teslim edildi, okundu
+
+3.4 Pull-to-Refresh
+   - Yenilemek için aşağı çek
+   - Kod örneği:
+     let startY;
+     container.addEventListener('touchstart', (e) => startY = e.touches[0].pageY);
+     container.addEventListener('touchmove', (e) => {
+       const y = e.touches[0].pageY - startY;
+       if (y > 100) refreshChats();
+     });
+
+3.5 Kaydırma Jestleri
+   - Eylemler için kaydırma hareketleri
+   - Kod örneği:
+     let touchStartX;
+     message.addEventListener('touchstart', (e) => touchStartX = e.touches[0].clientX);
+     message.addEventListener('touchend', (e) => {
+       const diff = e.changedTouches[0].clientX - touchStartX;
+       if (diff > 50) showReplyOptions();
+       if (diff < -50) showDeleteOptions();
+     });
+
+3.6 Haptik Geri Bildirim
+   - Dokunsal geri bildirim
+   - Kod örneği:
+     function hapticFeedback() {
+       if (navigator.vibrate) navigator.vibrate(50);
+     }
+
+3.7 Koyu/Açık Tema Geçişi
+   - Tema seçimi
+   - Kod örneği:
+     function toggleTheme() {
+       document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+       localStorage.setItem('theme', isDark ? 'light' : 'dark');
+     }
+
+3.8 Mesaj Arama
+   - Mesajlarda arama
+   - Kod örneği:
+     function searchMessages(query) {
+       return chats.flatMap(chat =>
+         chat.messages.filter(msg => msg.text.includes(query))
+       );
+     }
+
+3.9 Mesaj Tepki/Emoji Desteği
+   - Mesajlara emoji ekle
+   - Kod örneği:
+     function addReaction(messageId, emoji) {
+       // React ekle API çağrısı
+     }
+
+ORTA ÖNCELİK:
+---------------
+
+3.10 Mesaj İletme
+     - Mesajları başkalarına ilet
+
+3.11 Mesaj Düzenleme/Silme
+     - Gönderilen mesajları düzenle/sil
+
+3.12 Mesaj Yanıtla
+     - Mesajları yanıtla
+
+3.13 Rehber Grupları/Favoriler
+     - Kişileri grupla
+
+3.14 Sohbet Bazlı Bildirimleri Sustur
+     - Bildirimleri sustur
+
+3.15 Arşivlenmiş Sohbetler
+     - Sohbetleri arşivle
+
+3.16 Mesajları Kopyala
+     - Metni kopyala
+
+3.17 Mesajları Öne Çıkar
+     - Önemli mesajları işaretle
+
+3.18 Mention Sistemi
+     - Kullanıcıları etiketle (@kullanıcı)
+
+3.19 Spam Filtresi
+     - İstenmeyen mesajları filtrele
+
+3.20 Okunmamış Mesaj Sayısı
+     - Okunmamış mesajları göster
+
+3.21 Son Görülme Ayarı
+     - Son görülme paylaşımını kontrol et
+
+3.22 Profil Resmi Yükleme
+     - Profil resmini yükle ve değiştir
+
+3.23 Durum Mesajı
+     - Durum/ayarla mesajı ekle
+
+3.24 Sohbet Duvar Kağıdı
+     - Sohbet arka planını değiştir
+
+3.25 Sesli Arama
+     - WebRTC ile sesli arama
+
+3.26 Görüntülü Arama
+     - WebRTC ile görüntülü arama
+
+3.27 Ekran Paylaşımı
+     - Ekran paylaşımı desteği
+
+3.28 Dosya Önizleme
+     - Dosyaları önizle
+
+3.29 Konum Paylaşımı
+     - Canlı konum paylaş
+
+3.30 QR Kod ile Kişi Ekle
+     - QR kod ile kişi ekle
+
+3.31 Grup Bilgileri
+     - Grup üyelerini ve bilgilerini göster
+
+3.32 Yönetici Hakları
+     - Grup yöneticisi hakları
+
+3.33 Mesaj Bildirimleri
+     - Tarayıcı bildirimleri
+
+3.34 Sesli Mesaj Önizleme
+     - Sesli mesajı hızlı önizle
+
+3.35 Video Önizleme
+     - Videoyu hızlı önizle
+
+3.36 GIF Desteği
+     - GIF gönderme ve gösterme
+
+3.37 Sticker Desteği
+     - Sticker gönderme
+
+3.38 Voice-to-Text
+     - Sesli mesajı metne çevir
+
+3.39 Otomatik Çeviri
+     - Mesajları otomatik çevir
+
+3.40 Emoji Picker
+     - Gelişmiş emoji seçici
+
+3.41 Klavye Kısayolları
+     - Klavye kısayolları
+
+3.42 Karanlık Mod Animasyonu
+     - Tema geçiş animasyonu
+
+3.43 Skeleton Loading
+     - Yükleme animasyonu
+
+3.44 Error Boundaries
+     - Hata sınırları
+
+3.45 Yeniden Bağlanma Göstergesi
+     - Bağlantı durumu göster
+
+3.46 İnternet Bağlantısı Durumu
+     - Bağlantı durumunu göster
+
+3.47 Veri Kullanımı İstatistikleri
+     - Veri kullanımını göster
+
+3.48 Depolama Kullanımı
+     - Depolama kullanımını göster
+
+3.49 Uygulama Boyutu İstatistikleri
+     - Uygulama boyutunu göster
+
+
+4. KOD KALİTESİ
+----------------
+
+YÜKSEK ÖNCELİK:
+----------------
+
+4.1 TypeScript'e Geçiş
+   - Tip güvenliği ekle
+   - Kod örneği:
+     interface Message {
+       id: string;
+       text: string;
+       sender: 'mine' | 'theirs';
+       timestamp: number;
+     }
+
+4.2 State Management Uygula
+   - Redux veya Zustand
+   - Kod örneği:
+     import { create } from 'zustand';
+     const useChatStore = create((set) => ({
+       chats: [],
+       addChat: (chat) => set((state) => ({ chats: [...state.chats, chat] }))
+     }));
+
+4.3 Kapsamlı Hata Sınırları
+   - React Error Boundaries
+   - Kod örneği:
+     class ErrorBoundary extends React.Component {
+       state = { hasError: false };
+       static getDerivedStateFromError(error) {
+         return { hasError: true };
+       }
+       render() {
+         if (this.state.hasError) return <ErrorFallback />;
+         return this.props.children;
+       }
+     }
+
+4.4 Bileşen Tabanlı Mimari
+   - Bileşenleri modüler hale getir
+   - Kod örneği:
+     export function MessageBubble({ message }) {
+       return <div className="bubble">{message.text}</div>;
+     }
+
+ORTA ÖNCELİK:
+---------------
+
+4.5 E2E Testleri
+   - Playwright veya Cypress
+   - Kod örneği:
+     test('can send a message', async ({ page }) => {
+       await page.goto('http://localhost:3000');
+       await page.fill('#message-input', 'Hello');
+       await page.click('.send-button');
+       await expect(page.locator('.message-bubble')).toContainText('Hello');
+     });
+
+4.6 Unit Testleri
+   - Jest veya Vitest
+   - Kod örneği:
+     test('sendMessage should add message to chat', () => {
+       const { result } = renderHook(() => useChat());
+       act(() => result.current.sendMessage('Hello'));
+       expect(result.current.chats[0].messages).toHaveLength(1);
+     });
+
+4.7 PWA Manifest Uygula
+   - Progressive Web App
+   - JSON örneği:
+     {
+       "name": "Nabapp",
+       "short_name": "Nabapp",
+       "start_url": "/",
+       "display": "standalone",
+       "background_color": "#07080c",
+       "theme_color": "#07080c"
+     }
+
+4.8 Erişilebilirlik İyileştirmeleri
+   - ARIA etiketleri, klavye navigasyonu
+   - HTML örneği:
+     <button aria-label="Send message" role="button">
+       <svg>...</svg>
+     </button>
+
+4.9 Linting
+   - ESLint ve Prettier
+   - JSON örneği:
+     {
+       "extends": ["eslint:recommended", "plugin:react/recommended"],
+       "rules": {
+         "no-unused-vars": "error",
+         "react/prop-types": "off"
+       }
+     }
+
+4.10 Code Splitting
+    - Kodu dinamik import ile böl
+    - Kod örneği:
+      const ChatView = React.lazy(() => import('./ChatView'));
+
+4.11 Bundle Analyzer
+    - Bundle boyutunu analiz et
+    - Kod örneği:
+      const withBundleAnalyzer = require('@next/bundle-analyzer')();
+
+
+5. RESPONSIVE DESIGN
+--------------------
+
+5.1 Mobile-First Design
+   - Önce mobil tasarım
+
+5.2 Touch-Optimized UI
+   - Dokunmatik optimizasyonu
+
+5.3 Adaptive Layout
+   - Adaptif düzen
+
+5.4 Fluid Typography
+   - Akışkan tipografi
+
+5.5 Responsive Images
+   - Duyarlı görseller
+
+5.6 Viewport Meta Tag
+   - Viewport meta etiketi
+
+5.7 Orientation Change
+   - Yönlendirme değişikliği desteği
+
+5.8 Safe Area Insets
+   - Güvenli alan iç boşlukları
+
+
+6. ANİMASYONLAR VE GÖRSEL GERİ BİLDİRİM
+-----------------------------------------
+
+6.1 Smooth Transitions
+   - Yumuşak geçişler
+
+6.2 Loading States
+   - Yükleme durumları
+
+6.3 Micro-interactions
+   - Mikro etkileşimler
+
+6.4 Animation Performance
+   - Animasyon performansı
+
+6.5 GPU Acceleration
+   - GPU hızlandırma
+
+6.6 Animation Libraries
+   - Framer Motion veya GSAP
+   - Kod örneği:
+     import { motion } from 'framer-motion';
+     <motion.div
+       initial={{ opacity: 0 }}
+       animate={{ opacity: 1 }}
+       transition={{ duration: 0.3 }}
+     >
+       Message
+     </motion.div>
+
+
+7. ERİŞİLEBİLİRLİK (ACCESSIBILITY)
+----------------------------------
+
+7.1 ARIA Labels
+   - ARIA etiketleri
+
+7.2 Keyboard Navigation
+   - Klavye navigasyonu
+
+7.3 Screen Reader Support
+   - Ekran okuyucu desteği
+
+7.4 Focus Management
+   - Odak yönetimi
+
+7.5 Color Contrast
+   - Renk kontrastı
+
+7.6 Text Scaling
+   - Metin ölçekleme
+
+7.7 Reduced Motion
+   - Azaltılmış hareket desteği
+
+7.8 Alt Text
+   - Alt metin
+
+7.9 Semantic HTML
+   - Anlamsal HTML
+
+
+8. İZLEME VE ANALİTİK
+-----------------------
+
+8.1 Error Tracking
+   - Hata takibi (Sentry)
+   - Kod örneği:
+     import * as Sentry from '@sentry/browser';
+     Sentry.init({ dsn: 'YOUR_DSN' });
+
+8.2 User Analytics
+   - Kullanıcı analitiği
+
+8.3 Performance Monitoring
+   - Performans izleme
+
+8.4 A/B Testing
+   - A/B testi
+
+8.5 Feature Flags
+   - Özellik bayrakları
+
+8.6 User Feedback
+   - Kullanıcı geri bildirimi
+
+
+9. FRONTEND TEST KONTROL LİSTESİ
+---------------------------------
+
+[ ] Tüm önemli kullanıcı akışları test edilir
+[ ] Erişilebilirlik testleri yapılır
+[ ] Performans testleri yapılır
+[ ] Cross-browser testleri yapılır
+[ ] Mobile testleri yapılır
+[ ] Güvenlik testleri yapılır
+[ ] Ağ koşulları test edilir (yavaş ağ, çevrimdışı)
+[ ] Geri bildirim mekanizmaları test edilir
+
+
+===============================================================================
+                        BÖLÜM 3: PROJE DÜZEYİ ÖNERİLERİ
+===============================================================================
+
+1. ORTAM DEĞİŞKENLERİ
+----------------------
+
+Gerekli Değişkenler:
+- NABAPP_SECRET=your-secret-key-here (Güvenlik)
+- TWILIO_ACCOUNT_SID=your-twilio-sid (SMS - İsteğe bağlı)
+- TWILIO_AUTH_TOKEN=your-twilio-token (SMS - İsteğe bağlı)
+- TWILIO_FROM_NUMBER=+1234567890 (SMS - İsteğe bağlı)
+- NABAPP_SMS_PROVIDER=twilio (SMS - İsteğe bağlı)
+- PORT=3000 (Sunucu)
+- NODE_ENV=production (Sunucu)
+- ALLOWED_ORIGINS=https://yourdomain.com (CORS - İsteğe bağlı)
+
+.env Örneği:
+- NABAPP_SECRET=change-this-in-production
+- PORT=3000
+- NODE_ENV=development
+
+
+2. DEPLOYMENT REHBERLERİ
+-------------------------
+
+2.1 Docker Deployment
+   - Dockerfile ayarla
+   - Docker Compose kullan
+   - Volume mapping ile veri kalıcılığı
+
+2.2 Cloud Platform Deployment
+   - Heroku deployment
+   - Render.com deployment
+   - AWS EC2 deployment
+   - PM2 ile process management
+
+2.3 CI/CD Pipeline
+   - GitHub Actions kullan
+   - Otomatik test ve deployment
+   - Rollback mekanizması
+
+
+3. İZLEME VE LOGGING
+---------------------
+
+3.1 Winston Loglama Kurulumu
+   - Gelişmiş loglama sistemi
+   - Dosya ve console logları
+   - Log rotasyonu
+
+3.2 Uygulama Performans İzleme (APM)
+   - New Relic entegrasyonu
+   - Datadog entegrasyonu
+   - Performance metrics
+
+3.3 Hata Takibi (Sentry)
+   - Sentry entegrasyonu
+   - Error tracking
+   - Performance monitoring
+
+
+4. YEDEKLEME VE KURTARMA
+-------------------------
+
+4.1 Veritabanı Yedekleme
+   - Otomatik yedekleme scripti
+   - Cron job ile zamanlama
+   - Yedek rotasyonu
+
+4.2 Kurtarma Prosedürü
+   - Veritabanı geri yükleme
+   - Hizmet restart
+   - Veri bütünlüğü kontrolü
+
+
+5. GÜVENLİK DENETİM KONTROL LİSTESİ
+------------------------------------
+
+Genel Güvenlik:
+[ ] Tüm ortam değişkenleri güvenli (gizli değil)
+[ ] HTTPS zorunlu (SSL/TLS sertifikası)
+[ ] Güvenlik başlıkları yapılandırılmış (helmet)
+[ ] Rate limiting aktif
+[ ] Input validation yapılmış
+[ ] SQL injection koruması
+[ ] XSS koruması
+[ ] CSRF koruması
+[ ] Güvenli şifre hashleme (scrypt kullanılıyor ✓)
+[ ] Session yönetimi güvenli
+[ ] Dosya yükleme sınırları
+[ ] API rate limiting
+[ ] Loglarda gizli bilgiler yok
+
+Veritabanı Güvenliği:
+[ ] Veritabanı dosyası güvenli dizinde
+[ ] Veritabanı yedekleri şifreli
+[ ] Erişim hakları kısıtlı
+[ ] Hassas veriler şifreli
+
+Network Güvenliği:
+[ ] Firewall yapılandırılmış
+[ ] Sadece gerekli portlar açık
+[ ] DDoS koruması
+[ ] IP whitelisting (gerekirse)
+
+
+6. PERFORMANS OPTİMİZASYONU
+----------------------------
+
+Sunucu Optimizasyonu:
+[ ] Response compression aktif
+[ ] Static assets CDN'de
+[ ] Database indexing yapılmış
+[ ] Connection pooling
+[ ] Caching (Redis) kullanılıyor
+[ ] Load balancing (üretim için)
+[ ] HTTP/2 aktif
+[ ] Keep-alive connections
+
+İstemci Optimizasyonu:
+[ ] Code splitting
+[ ] Lazy loading
+[ ] Image optimization
+[ ] Bundle size minimize
+[ ] Service worker
+[ ] Browser caching
+
+Monitoring:
+[ ] CPU kullanımı izleniyor
+[ ] Memory kullanımı izleniyor
+[ ] Response time izleniyor
+[ ] Error rate izleniyor
+[ ] Uptime monitoring
+[ ] Alert sistemi
+
+
+7. OPERASYON PROSÜDÜRLERİ
+---------------------------
+
+Günlük Bakım:
+- Logları incele
+- Disk kullanımını kontrol et
+- Backup'ları doğrula
+- Error loglarını incele
+- Sistem kaynaklarını izle
+
+Haftalık Bakım:
+- Bağımlılıkları güncelle
+- Güvenlik patch'lerini uygula
+- Performans metriklerini incele
+- Yedekleme test et
+- Capacity planning
+
+Aylık Bakım:
+- Full güvenlik denetimi
+- Sürüm güncellemeleri
+- Disaster recovery test
+- Cost analysis
+- Raporlama
+
+
+8. ACİL DURUM PROSÜDÜRLERİ
+---------------------------
+
+8.1 Sunucu Çökmesi
+   1. Hizmeti yeniden başlat: pm2 restart nabapp
+   2. Logları incele
+   3. Kaynağı belirle
+   4. Çözüm uygula
+   5. Monitor et
+
+8.2 Veritabanı Bozulması
+   1. Hizmeti durdur
+   2. Son yedeği geri yükle
+   3. Hizmeti başlat
+   4. Veri bütünlüğünü kontrol et
+   5. Logları incele
+
+8.3 DDoS Saldırısı
+   1. Rate limiting'i sıkılaştır
+   2. Cloudflare veya benzeri aktive et
+   3. IP'leri bloke et
+   4. İlgili otoriteye bildir
+   5. Monitor et
+
+8.4 Veri İhlali
+   1. Etkilenen sistemleri izole et
+   2. Kaynağı belirle
+   3. Logları koru
+   4. Kullanıcıları bilgilendir
+   5. Yasal gereklilikleri yerine getir
+   6. Gelecekteki önlemler al
+
+
+===============================================================================
+                           UYGULAMA ÖNCELİĞİ
+===============================================================================
+
+AŞAMA 1 (ACİL - 1-2 Hafta):
+----------------------------
+Backend:
+- Helmet middleware ekle
+- CSRF koruması uygula
+- İstek doğrulama (express-validator)
+- CORS yapılandırma
+- Winston loglama
+
+Frontend:
+- CSP uygula
+- XSS koruması ekle
+- Güvenli localStorage
+- Token yenileme mekanizması
+
+
+AŞAMA 2 (KISA VADELİ - 1-2 Ay):
+---------------------------------
+Backend:
+- Response compression
+- Redis önbellekleme
+- TypeScript geçişi
+- Güçlü kapanım işleme
+
+Frontend:
+- Lazy loading
+- Service worker
+- Optimistik UI
+- İstek debouncing
+
+
+AŞAMA 3 (ORTA VADELİ - 2-3 Ay):
+---------------------------------
+Backend:
+- Test paketi (Jest)
+- API dokümantasyonu (Swagger)
+- Sentry hata takibi
+- CI/CD pipeline
+
+Frontend:
+- TypeScript geçişi
+- State management (Zustand)
+- E2E testleri (Cypress)
+- PWA manifest
+
+
+AŞAMA 4 (UZUN VADELİ - 3-6 Ay):
+---------------------------------
+Backend:
+- Push bildirimleri (FCM)
+- Mesaj arama
+- Grup sohbet desteği
+- Mesaj tepkileri
+
+Frontend:
+- Gerçek zamanlı yazma göstergeleri
+- Mesaj okuma alındısı
+- Koyu/açık tema geçişi
+- Mesaj arama ve filtreleme
+
+
+===============================================================================
+                        KAYNAKLAR VE DOKÜMANLAR
+===============================================================================
+
+Dokümantasyon:
+- Node.js Best Practices: https://github.com/goldbergyoni/nodebestpractices
+- OWASP Security Guidelines: https://owasp.org/
+- Express Security: https://expressjs.com/en/advanced/best-practice-security.html
+- Web Security: https://owasp.org/www-project-web-security-testing-guide/
+
+Araçlar:
+- PM2: Process Manager
+- Winston: Logging
+- Sentry: Error Tracking
+- New Relic: APM
+- Docker: Containerization
+- GitHub Actions: CI/CD
+- Jest: Testing
+- Cypress: E2E Testing
+- TypeScript: Type Safety
+
+Topluluk:
+- Node.js Discord
+- Stack Overflow
+- GitHub Issues
+- Reddit r/node
+
+
+===============================================================================
+                    ÖZET VE TAVSİYELER
+===============================================================================
+
+1. GÜVENLİK ÖNCELİKLİ:
+   - XSS, CSRF ve SQL injection korumaları acil
+   - HTTPS zorunlu
+   - Rate limiting kritik
+   - Loglama hemen başlanmalı
+
+2. PERFORMANS ÖNCELİKLİ:
+   - Compression ve caching kısa vadeli
+   - Redis orta vadeli
+   - CDN uzun vadeli
+
+3. KOD KALİTESİ:
+   - TypeScript geçişi orta vadeli
+   - Testler kısa vadeli
+   - Linting hemen başlanmalı
+
+4. UX İYİLEŞTİRMELERİ:
+   - Temel UX özellikleri kısa vadeli
+   - Gelişmiş özellikler uzun vadeli
+   - Erişilebilirlik her zaman önemli
+
+5. OPERASYON:
+   - Monitoring hemen başlanmalı
+   - Yedekleme acil
+   - CI/CD kısa vadeli
+   - Disaster recovery orta vadeli
+
+
+===============================================================================
+                        DOSYA SONU
+===============================================================================
+
+Bu öneri dosyası E:\Nabapp\oneri.txt olarak kaydedilmiştir.
+Tüm öneriler detaylı olarak açıklanmıştır.
+
+Son güncelleme: 2026-11-05

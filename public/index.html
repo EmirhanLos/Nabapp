@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" id="meta-theme-color" content="#f4f0e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="Nabapp — gizliliği önceliklendiren, uçtan uca şifreli mesajlaşma deneyimi.">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <title>Nabapp — Uçtan Uca Şifreli Mesajlaşma</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..600&family=Instrument+Sans:ital,wght@0,400..700;1,400..600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <section id="auth-screen" aria-labelledby="auth-title">
+      <aside class="auth-aside">
+        <div class="auth-aside-top">
+          <span class="brand-mark" aria-hidden="true">n</span>
+          <span class="brand-word">nabapp</span>
+        </div>
+        <div class="auth-aside-body">
+          <p class="eyebrow">UÇTAN UCA ŞİFRELİ</p>
+          <h2 class="auth-aside-title">Sohbetin,<br>yalnızca senin.</h2>
+          <p class="auth-aside-copy">Mesajlar cihazında şifrelenir; sunucu içeriği hiçbir zaman göremez. Numarandan başka bir kimliğe ihtiyaç yok.</p>
+        </div>
+        <ul class="auth-aside-list">
+          <li><span aria-hidden="true">01</span> Anahtarlar cihazda üretilir</li>
+          <li><span aria-hidden="true">02</span> Sunucu yalnızca şifreli blob taşır</li>
+          <li><span aria-hidden="true">03</span> Oturumları anında kapatabilirsin</li>
+        </ul>
+        <div class="auth-aside-foot">
+          <span aria-hidden="true">n</span>
+          <p>Uçtan uca şifreleme · X3DH + Double Ratchet</p>
+        </div>
+      </aside>
+
+      <div class="auth-panel">
+        <div class="auth-card">
+          <div class="auth-logo" aria-hidden="true">n</div>
+          <p class="eyebrow auth-eyebrow">NABAPP / ÖZEL ALANIN</p>
+          <h1 class="auth-title" id="auth-title">Hesabına giriş yap</h1>
+          <p class="auth-description">Telefon numaranı doğrulayarak devam et.</p>
+
+          <section id="step-phone" class="auth-step active" aria-label="Telefon doğrulama">
+            <form id="phone-form">
+              <div class="field-group">
+                <label for="phone-input">Telefon numarası</label>
+                <input id="phone-input" type="tel" autocomplete="tel" placeholder="+90 5xx xxx xx xx" required>
+              </div>
+              <div class="auth-error" id="phone-error" role="alert"></div>
+              <div class="auth-known-accounts hidden" id="known-accounts"></div>
+              <button class="auth-submit" type="submit">Kod gönder <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+
+          <section id="step-code" class="auth-step" aria-label="SMS kodu">
+            <form id="code-form">
+              <p class="auth-step-copy">Telefonuna gönderilen doğrulama kodunu gir.</p>
+              <div class="field-group">
+                <label for="otp-input">Doğrulama kodu</label>
+                <input id="otp-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" required>
+              </div>
+              <div class="auth-note">Kullanım notu: Kod yalnızca 5 dakika geçerlidir. Bu kodu kimseyle paylaşma.</div>
+              <div class="auth-error" id="code-error" role="alert"></div>
+              <button class="auth-submit" type="submit">Doğrula <span aria-hidden="true">→</span></button>
+              <button type="button" class="auth-link" id="resend-btn">Kodu yeniden gönder</button>
+            </form>
+          </section>
+
+          <section id="step-register" class="auth-step" aria-label="Hesap oluşturma">
+            <form id="register-form">
+              <p class="auth-step-copy">Hesabını tamamlamak için adını ve parolanı belirle.</p>
+              <div class="field-group"><label for="display-name-input">Adın</label><input id="display-name-input" type="text" minlength="2" maxlength="60" autocomplete="name" required></div>
+              <div class="field-group"><label for="register-password-input">Parola</label><input id="register-password-input" type="password" minlength="8" autocomplete="new-password" required></div>
+              <div class="auth-note">Telefon doğrulamasına ek olarak hesap ayarlarından iki adımlı doğrulamayı etkinleştirebilirsin.</div>
+              <div class="password-meter compact" id="register-password-meter">
+                <div class="password-meter-label">Parola gücü</div>
+                <div class="password-meter-bar"><span class="password-meter-fill"></span></div>
+                <small>En az 8 karakter, harf ve rakam kombinasyonu önerilir.</small>
+              </div>
+              <div class="field-group"><label for="confirm-password-input">Parola tekrarı</label><input id="confirm-password-input" type="password" minlength="8" autocomplete="new-password" required></div>
+              <div class="auth-error" id="register-error" role="alert"></div>
+              <button class="auth-submit" type="submit">Kaydı tamamla <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+
+          <section id="step-2fa" class="auth-step" aria-label="Hesap girişi">
+            <form id="twofa-form">
+              <p class="auth-step-copy">Telefon doğrulandı. Mevcut hesabına parolanla giriş yap.</p>
+              <div class="field-group"><label for="login-password-input">Parola</label><input id="login-password-input" type="password" autocomplete="current-password" required></div>
+              <div class="field-group"><label for="totp-input">2FA kodu (varsa)</label><input id="totp-input" class="otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="10" aria-describedby="twofa-help"></div>
+              <div class="auth-note auth-inline-note">Giriş, telefon doğrulamasına ek olarak hesap parolanı ve açıksa 2FA kodunu kontrol eder.</div>
+              <p id="twofa-help" class="auth-step-copy">İki adımlı doğrulama açıksa kodunu gir. Kurtarma kodu da kullanabilirsin.</p>
+              <div class="auth-error" id="twofa-error" role="alert"></div>
+              <button class="auth-submit" type="submit">Giriş yap <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+
+          <section id="step-lock" class="auth-step" aria-label="Ekran kilidi açma">
+            <form id="lock-form">
+              <p class="auth-step-copy">Devam etmek ve bu cihazdaki şifreleme anahtarlarını açmak için parolanla doğrula.</p>
+              <div id="lock-account-fields">
+                <div class="field-group"><label for="lock-password-input">Hesap parolası</label><input id="lock-password-input" type="password" autocomplete="current-password" required></div>
+                <div class="field-group"><label for="lock-twofa-input">2FA veya kurtarma kodu (varsa)</label><input id="lock-twofa-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="32"></div>
+              </div>
+              <div id="lock-backup-fields" hidden>
+                <p class="auth-step-copy">Hesap parolan doğrulandı. Bu cihazdaki anahtar yedeği eski bir parolayla şifrelenmiş olabilir. Yedeği açmak için daha önce kullandığın parolayı gir. Açılınca yedek mevcut hesap parolanla yeniden şifrelenir.</p>
+                <div class="field-group"><label for="lock-backup-password">Önceki yedek parolası</label><input id="lock-backup-password" type="password" autocomplete="current-password" required></div>
+              </div>
+              <div class="auth-error" id="lock-error" role="alert"></div>
+              <button id="lock-submit" class="auth-submit" type="submit">Kilidi aç <span aria-hidden="true">→</span></button>
+            </form>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <div id="onboarding-modal" class="modal-backdrop hidden" aria-hidden="true">
+      <section class="modal glass" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+        <button class="icon-button modal-close" id="onboarding-close" type="button" aria-label="Kapat">×</button>
+        <div class="modal-symbol" aria-hidden="true">✓</div>
+        <p class="eyebrow">NABAPP / MOBİL KURULUM</p>
+        <h2 id="onboarding-title">Gizlilik ayarlarını tanı</h2>
+        <p class="modal-copy">Güvenlik ayarlarından sunucu doğrulamalı 2FA'yı açabilir, ekran kilidini ve biyometrik kimlik doğrulamayı etkinleştirebilirsin.</p>
+        <div class="onboarding-list">
+          <div><strong>1.</strong><span>İki adımlı doğrulamayı hesap ayarlarından etkinleştir.</span></div>
+          <div><strong>2.</strong><span>Ekran kilidi süresini seç; Touch ID / Face ID desteğini bağla.</span></div>
+          <div><strong>3.</strong><span>Oturumlar bölümünden tanımadığın sunucu oturumlarını kapat.</span></div>
+        </div>
+        <button class="primary-button" id="onboarding-start-button" type="button">Güvenlik ayarlarını aç <span aria-hidden="true">→</span></button>
+      </section>
+    </div>
+
+    <div id="app-screen" class="hidden">
+      <main class="app-shell">
+        <section class="workspace" id="workspace">
+          <header class="topbar">
+            <a class="wordmark" href="#" aria-label="Nabapp ana sayfa"><span class="wordmark-icon">n</span><span class="wordmark-text">nabapp</span></a>
+            <label class="search-pill" for="search-input">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+              <input id="search-input" type="search" placeholder="Kişi veya mesaj ara" autocomplete="off" aria-label="Kişi veya mesaj ara">
+              <kbd aria-hidden="true">⌘ K</kbd>
+            </label>
+            <div class="topbar-actions">
+              <button class="icon-button add-contact" id="new-chat-button" type="button" aria-label="Telefon numarasıyla sohbet başlat" title="Sohbet başlat">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+              </button>
+              <button class="icon-button add-contact" id="new-group-button" type="button" aria-label="Grup oluştur" title="Grup oluştur">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"></circle><path d="M3 20a6 6 0 0 1 12 0M17 9a3 3 0 0 1 0 6M18 20a6 6 0 0 0-3-5.2"></path></svg>
+              </button>
+            </div>
+          </header>
+
+          <section class="home-view" id="home-view">
+            <div class="section-heading"><div><p class="eyebrow">NABAPP / ÖZEL ALANIN</p><h1>Sohbetler <span id="chat-count">00</span></h1></div></div>
+            <div class="conversation-list" id="conversation-list" aria-label="Kişiler ve sohbetler"></div>
+            <div class="empty-state hidden" id="empty-state"><span class="empty-mark" aria-hidden="true">⌕</span><strong>Henüz sohbetin yok</strong><span>Bir telefon numarasıyla yeni sohbet başlat.</span></div>
+            <button class="empty-new-chat hidden" id="empty-new-chat" type="button">Bu numarayla sohbet başlat <span aria-hidden="true">→</span></button>
+          </section>
+
+          <section class="utility-view hidden" id="utility-view" aria-live="polite"></section>
+
+          <nav class="bottom-nav glass" aria-label="Gezinme">
+            <button class="nav-item" type="button" data-page="settings" aria-label="Ayarlar"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4L5.3 15a8 8 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1L9 7.4h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a8 8 0 0 1-.1 2Z"></path></svg><span>Ayarlar</span></button>
+            <button class="nav-item active" type="button" data-page="chats" aria-label="Sohbetler"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2 1-4a7.5 7.5 0 1 1 16-5.5Z"></path><path d="M8 11h8M8 14h5"></path></svg><span>Sohbetler</span></button>
+            <button class="nav-item" type="button" data-page="profile" aria-label="Profil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20a7 7 0 0 1 14 0"></path></svg><span>Profil</span></button>
+          </nav>
+        </section>
+
+        <div class="chat-backdrop" id="chat-backdrop"></div>
+
+        <section class="chat-panel" id="chat-panel" aria-label="Mesajlaşma">
+          <div class="chat-empty" id="chat-empty">
+            <span class="empty-mark" aria-hidden="true">n</span><strong>Özel sohbetin burada</strong>
+            <span>Bir telefon numarasıyla yeni sohbet başlat.</span>
+            <button class="soft-button" id="welcome-new-chat" type="button"><span aria-hidden="true">＋</span> Yeni sohbet</button>
+          </div>
+
+          <div class="chat-content hidden" id="chat-content">
+            <div class="chat-load-status hidden" id="chat-load-status" aria-live="polite">
+              <div class="chat-load-meta">
+                <span>Mesajlar yükleniyor</span>
+                <strong id="chat-load-text">Bağlanıyor…</strong>
+              </div>
+              <div class="chat-load-bar" aria-hidden="true">
+                <span id="chat-load-progress"></span>
+              </div>
+            </div>
+
+            <header class="chat-header">
+              <button class="icon-button back-button" id="close-chat" type="button" aria-label="Kişi listesine dön"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"></path></svg></button>
+              <div class="chat-avatar" id="chat-avatar" aria-hidden="true"></div>
+              <div class="chat-heading">
+                <div class="chat-title-row"><strong id="chat-name"></strong></div>
+                <span id="chat-status" aria-live="polite"></span>
+              </div>
+              <div class="header-actions">
+                <button class="icon-button" id="chat-search-toggle" type="button" aria-label="Bu sohbette ara" title="Sohbette ara"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg></button>
+                <button class="icon-button disappearing-toggle" id="disappearing-toggle" type="button" aria-label="Kaybolan mesaj ayarını değiştir" title="Kaybolan mesajlar: kapalı">Kapalı</button>
+                <button class="icon-button call-button" id="audio-call" type="button" aria-label="Sesli arama"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a15 15 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2C9 20 4 15 3 6a2 2 0 0 1 2-2Z"></path></svg></button>
+                <button class="icon-button call-button" id="video-call" type="button" aria-label="Görüntülü arama"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"></rect><path d="m16 10 5-3v10l-5-3"></path></svg></button>
+                <button class="icon-button chat-info" id="chat-info-button" type="button" aria-label="Kişi bilgileri ve güvenlik kodu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg></button>
+              </div>
+            </header>
+
+            <div class="chat-search-bar hidden" id="chat-search-bar">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+              <input id="chat-search-input" type="search" placeholder="Bu sohbette ara" autocomplete="off" aria-label="Bu sohbette mesaj ara">
+              <span class="chat-search-count" id="chat-search-count" aria-live="polite"></span>
+              <button class="icon-button" id="chat-search-close" type="button" aria-label="Aramayı kapat">×</button>
+            </div>
+
+            <div class="encryption-strip"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 1 1 8 0v3"></path></svg><span>Mesajlar istemcide şifrelenir. Güvenlik numarasını kişi bilgisi menüsünden doğrulayabilirsiniz.</span></div>
+            <div class="key-warning-strip hidden" id="key-warning" role="status">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 3 20h18L12 4Z"></path><path d="M12 10v4M12 17h.01"></path></svg>
+              <span>Bu cihazda bu hesabın şifreleme anahtarları yok; mesaj gönderilemiyor.</span>
+              <button class="strip-action" id="key-warning-action" type="button">Anahtarları geri yükle</button>
+            </div>
+            <div class="messages-area" id="messages-area" aria-live="polite"></div>
+
+            <form class="message-composer glass" id="message-form">
+              <div class="composer-tools">
+                <button class="icon-button attach-button" type="button" data-file-type=".png,.jpg,.jpeg,.gif,.webp,.mp4,.webm" aria-label="Fotoğraf veya video ekle"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 20"></path></svg></button>
+                <button class="icon-button" id="camera-button" type="button" aria-label="Kamerayla fotoğraf çek" title="Kamerayla fotoğraf çek"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l2-3h6l2 3h3a2 2 0 0 1 2 2v10H2V9a2 2 0 0 1 2-2Z"></path><circle cx="12" cy="13" r="3"></circle></svg></button>
+                <button class="icon-button" id="location-button" type="button" aria-label="Konumumu gönder" title="Konumumu gönder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></button>
+                <button class="icon-button attach-button" type="button" data-file-type=".pdf,.doc,.docx,.txt,.rtf,.xls,.xlsx,.ppt,.pptx,.zip" aria-label="Belge veya dosya ekle"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10z"></path><path d="M13 3v7h7M8 15h8M8 18h6"></path></svg></button>
+              </div>
+              <textarea id="message-input" rows="1" placeholder="Mesaj yaz..." aria-label="Mesaj yaz"></textarea>
+              <button class="icon-button record-button" id="record-button" type="button" aria-label="Ses kaydı başlat"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="12" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"></path></svg></button>
+              <button class="send-button" type="submit" aria-label="Mesajı gönder"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13"></path></svg></button>
+            </form>
+            <input id="file-input" type="file" class="hidden" multiple aria-label="Eklenecek dosyalar">
+            <input id="camera-input" type="file" class="hidden" accept="image/*" capture="environment" aria-label="Kamerayla fotoğraf çek">
+          </div>
+        </section>
+
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+        <section class="call-overlay hidden" id="call-overlay" role="dialog" aria-modal="true" aria-label="Arama">
+          <video id="remote-video" autoplay playsinline></video>
+          <video id="local-video" autoplay muted playsinline></video>
+          <p id="call-status">Arama bağlanıyor…</p>
+          <button class="soft-button" id="hangup-call" type="button">Aramayı bitir</button>
+        </section>
+
+        <div class="modal-backdrop hidden" id="modal-backdrop">
+          <section class="modal glass" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <button class="icon-button modal-close" id="modal-close" type="button" aria-label="Kapat">×</button>
+            <div class="modal-symbol" aria-hidden="true">＋</div><p class="eyebrow">NABAPP / YENİ SOHBET</p>
+            <h2 id="modal-title">Bir Nabapp kullanıcısı bul</h2>
+            <p class="modal-copy">Sohbet başlatmak için kayıtlı bir kullanıcının telefon numarasını gir.</p>
+            <label class="identity-input" for="identity-input"><span>TELEFON NUMARASI</span><input id="identity-input" type="tel" placeholder="+90 5xx xxx xx xx" autocomplete="tel"></label>
+            <label class="identity-input" for="nickname-input"><span>KİŞİ ADI (İSTEĞE BAĞLI)</span><input id="nickname-input" type="text" maxlength="60" placeholder="Kişilerimde görünecek ad"></label>
+            <button class="primary-button" id="start-chat-button" type="button">Kullanıcıyı bul <span aria-hidden="true">→</span></button>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script src="storage.js" defer></script>
+    <script src="crypto.js" defer></script>
+    <script src="pwa.js" defer></script>
+    <script src="account-storage.js" defer></script>
+    <script src="identity-backup.js" defer></script>
+    <script src="app.js" defer></script>
+  </body>
+</html>
